@@ -1,5 +1,3 @@
-# COM3505 Lab Assessment 1
-
 # ESP32 WiFi Provisioning and OTA Firmware Update Guide
 
 This program is tailored for the ESP32 microcontroller, enabling it to establish an access point (AP) for Wi-Fi setup and facilitate over-the-air (OTA) firmware updates. By connecting to the ESP32's access point, users can input their Wi-Fi details(The laptop and ESP32 should be connected to the same network). Subsequently, the device is then capable of executing OTA updates by connecting to a specified firmware server.
