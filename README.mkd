@@ -1,0 +1,199 @@
+# COM3505 Lab Assessment 1
+
+# ESP32 WiFi Provisioning and OTA Firmware Update Guide
+
+This program is tailored for the ESP32 microcontroller, enabling it to establish an access point (AP) for Wi-Fi setup and facilitate over-the-air (OTA) firmware updates. By connecting to the ESP32's access point, users can input their Wi-Fi details(The laptop and ESP32 should be connected to the same network). Subsequently, the device is then capable of executing OTA updates by connecting to a specified firmware server.
+
+## Setup
+Below is a labelled image of the ESP32 setup.
+
+![ESP32 labelled setup](IoT-setup.png)
+
+## Video Of Correct Functionality
+
+Here is a video of the [ESP32 WiFi Provisioning and OTA update demo showing visual feedback](LA1/Wifi-Provisioning-And-OTA-Update-Video.mp4) or you can view it on this [Google Drive link](https://drive.google.com/drive/folders/1gw8w6OzQtUv5s6HWATgvI-AadaecQIeo?usp=sharing)
+
+## Required Libraries
+
+The program uses the following libraries:
+
+- `WebServer.h`: Facilitates the creation of a basic HTTP server on the ESP32, allowing for web-based interactions. More information is available [here](https://github.com/espressif/arduino-esp32/tree/master/libraries/WebServer)
+- `WiFi.h`:  This library enables the ESP32 to connect to Wi-Fi networks and establish its own access point. More information is available [here](https://github.com/espressif/arduino-esp32/tree/master/libraries/WiFi)
+- `HTTPClient.h`: This library is utilized for executing HTTP requests, which are crucial for retrieving firmware updates from a remote server. More information is available [here](https://github.com/espressif/arduino-esp32/tree/master/libraries/HTTPClient)
+- `Update.h`: Provides the necessary functionality for over-the-air (OTA) firmware updates on the ESP32, ensuring that the device can be updated without physical intervention. More information is available [here](https://github.com/espressif/arduino-esp32/tree/master/libraries/Update)
+
+## Constants
+
+The code has the following constants defined:
+
+- `firmwareVersion`: Represents the device's current firmware version.
+- `FIRMWARE_SERVER_IP_ADDR`: Specifies the IP address where the firmware server is located.
+- `FIRMWARE_SERVER_PORT`: Indicates the port on which the firmware server communicates.
+- `apSSID`: Sets the SSID for the ESP32's Wi-Fi access point.
+- `apPassword`: Defines the password for accessing the ESP32's Wi-Fi access point.
+
+## LED Setup
+The LED's are connected to the following pins:
+
+- `redLED`: Red LED, indicates OTA update failure(Pin 6).
+- `yellowLED`: Yellow LED, indicates WiFi-connection in progress or OTA update in progress(Pin 9).
+- `greenLED`: Green LED, indicates successful OTA update(Pin 10).
+- `redLEDWifiConnectError`: Red LED, indicates WiFi is not connected(Pin 12).
+- `greenLEDWifiConnect`: Green LED, indicates WiFi is connected(Pin 11).
+
+## Functions
+
+`server` is an instance of `WebServer` initialised on port 80 for incoming requests.
+
+Below describes the functions implemented in the code:
+
+- `handleRoot()`: Manages requests to the web server's root URL ("/"), showing a dynaminc list of available Wi-Fi networks and a form for Wi-Fi login details.
+- `handleConnect()`: Processes the "/connect" route, facilitating the connection to the chosen Wi-Fi network with the entered credentials.
+- `onButtonPress()`: Activated by a button press interrupt on GPIO pin 5, this function flags the system for an OTA update initiation and sets the `OTAUpdateStart` flag to true
+- `setup()`: Initialises ESP32, establishes the access point, and sets up server paths.
+- `setLEDState()`: Adjusts the status of the specified LED pin, turning it on or off. 
+- `blinkLED()`: Makes a specific LED pin blink for a set duration and frequency.
+- `loop()`: The main loop that monitors for web requests and triggers the OTA update process when `OTAUpdateStart` is flagged. 
+- `startOTAUpdate()`:  Executes the OTA firmware update, checking for and applying any available firmware upgrades.
+- `doCloudGet()`: Carries out HTTP GET request to the firmware server and returns the response code
+
+
+# Wi-Fi Connection and OTA Update Flow
+
+This document outlines the steps for connecting your device to a Wi-Fi network and performing an Over-The-Air (OTA) update.
+
+## Initial Access Point Mode
+
+1. The device initiates in Access Point (AP) mode, creating a Wi-Fi network with a predefined SSID and password.
+
+## User Wi-Fi Connection
+
+1. Users connect their computer or smartphone to the device's Wi-Fi network.
+2. Access the root webpage through a web browser.
+
+## Wi-Fi Network Selection and Authentication
+
+1. On the webpage, users can select their home or office Wi-Fi network from a list of available networks.
+2. Input the Wi-Fi password for the selected network and submit the information.
+
+## Device Network Connection
+
+1. After receiving the Wi-Fi details, the device connects to the selected network and displays its own IP address, indicating a successful connection.
+2. Throughout the process, LED indicators on the device provide visual feedback. These indicators show the progress of the connection, signal completion, and indicate whether the device is successfully connected to the WiFi or not.
+
+## OTA Update Activation
+
+1. The user initiates the OTA update process by pressing a button connected to the device on GPIO pin 5.
+
+## Firmware Update Process
+
+1. Once the OTA update process is initiated, the device checks the firmware server for available updates.
+2. If an update is found, the device automatically downloads and installs the new firmware.
+3. Throughout the update process, LED indicators on the device provide visual feedback. These indicators show the progress of the update, signal completion, and indicate whether the update was successful or if there was an error.
+
+
+## Visualization
+The code uses two LEDs to provide visual feedback during the WiFi provisioning process. Here is what each LED lighting up represents:
+
+- Red LED (redLEDWifiConnectError-pin 12): This LED is stays turned on when the ESP32 device isn't connected to the WiFi or if there was a failure when connecting to the WiFi. It is turned back on after the OTA update is complete and the ESP is rebooted.
+- Yellow LED (pin 9): This LED blinks whilst the provisioning is in progress.
+- Green LED (greenLEDWifiConnect-pin 11): This LED is stays turned on when the ESP32 device is connected to the WiFi. It is turned off after the OTA update is complete and the ESP is rebooted.
+
+The code uses three LEDs to provide visual feedback during during the OTA update process. Here is what each LED lighting up represents:
+
+- Red LED (pin 6): This LED blinks four times if the OTA update fails.
+- Yellow LED (pin 9): This LED blinks six times during the OTA update process to indicate that the update is in progress.
+- Green LED (pin 10): This LED blinks five times to indicate that the OTA update was successful.
+
+
+## Testing
+
+The project has been rigorously validated and verified to ensure its dependability. The following methods and strategies have been applied to achieve this:
+
+- **Constants**: Important parameters, such as the firmware version, firmware server's IP address, and port number, are defined as constants. This approach facilitates easy adjustments to these parameters without necessitating a comprehensive code review.
+
+- **Wi-Fi Access Point Setup**: The Wi-Fi access point (AP) created has a unique SSID and a robust password. This setup enables users to effortlessly link the ESP32 to their own network by inputting their network credentials.
+
+- **Utilizing proven libraries**: The WiFi, WebServer, HTTPClient, and Update libraries used in this project are widely recognised for their stability and have been extensively tested across numerous applications by a broad community of developers.
+
+- **Visual Feedback via LEDs**: LED indicators are utilised to provide immediate visual feedback regarding the ESP32's status. Various LEDs turn on/off or blink to reflect the device's state, making it easier for users to comprehend thestage the ESP32 is in.
+
+- **Interactive Web Interface**: An user fiendly web interface is designed as part of this project, offering users an easy platform to submit their Wi-Fi credentials. It simplifies the process of connecting to the preferred network by listing available networks for easy selection.
+
+- **Error Handling**: Comprehensive error handling is put in places to address various errors that may occur such as scenarios where network connections fail or OTA updates are unsuccessful. Such measures prevent the device from entering non-responsive states, this enhances the process of troubleshooting and resolution.
+
+
+# ESP Device Setup and Wi-Fi Connection Instructions
+
+This guide provides instructions for preparing your ESP device for Wi-Fi connectivity and setting it up as an access point.
+
+#### Bootloader Mode Activation
+
+1. Press and hold the **boot** button on the ESP board.
+2. While holding the **boot** button, press the **reset** button.
+3. First, release the **reset** button, then the **boot** button. This action puts the ESP in bootloader mode.
+
+#### Firmware Flashing
+
+- Flash the firmware onto your ESP board using your chosen flashing method.
+
+#### Port Configuration and Code Execution
+
+1. With the ESP connected to your computer via USB, select the appropriate port in your programming environment.
+2. Press the **reset** button on the ESP to start running the newly flashed code.
+
+#### Access Point Connection
+
+- The ESP will generate a Wi-Fi access point. Connect to this network by setting a unique name and password(this is set within the .ino file).
+
+#### Access the ESP Web Interface
+
+- Open a web browser and navigate to `http://192.168.4.1` to access the ESP's web interface.
+
+#### Wi-Fi Configuration
+
+- Enter the Wi-Fi network details (SSID and password) you wish the ESP to connect to. Ensure your firewall isn't blocking the connection.
+
+# OTA Update Procedure
+
+To update your ESP device firmware over-the-air (OTA), follow these instructions:
+
+#### Network Alignment
+
+- Make sure your ESP device and computer are connected to the same Wi-Fi network. Using a hotspot is also viable.
+
+#### Computer's IP Address Retrieval
+
+- Open a terminal and enter `ipconfig` to find your computer's IPv4 address in the "Wireless LAN" section.
+
+#### Python Server Initialization
+
+- In a new terminal window, run `python -m http.server 8000` to start a server on port 8000.
+
+#### Firmware File Preparation
+
+- Upload the updated sketch.ino file to your ESP using your preferred upload method.
+
+#### Version Increment
+
+- Increment the firmware version in your software, then use "Sketch" > "Export compiled binary" to save the new binary as "N.bin", where "N" is the new version number.
+
+#### Binary File Placement
+
+- Place the "N.bin" file in the directory where you started the Python server.
+
+#### Version File Creation
+
+- In the same directory, create a "version.txt" file and write the new version number inside.
+
+#### ESP Board Reset and Monitoring
+
+- Reset the ESP board and open the serial monitor in your programming software, ensuring the correct port is selected.
+
+#### Update Initiation and Completion
+
+- Initiate the update process by pressing the designated button on the breadboard. The ESP will connect to the server and download the new firmware. Wait until the update process concludes.
+
+#### Additional Considerations
+
+- Ensure proper connection of LEDs and buttons to the ESP32's GPIO pins. Adjust the SSID, password, server IP address, and port settings to fit your specific setup requirements.
